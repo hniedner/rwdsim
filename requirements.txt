@@ -1,0 +1,6 @@
+Pyarrow
+pandas
+numpy
+scipy
+pytest
+mypy
