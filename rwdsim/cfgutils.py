@@ -1,17 +1,17 @@
 # Define type variables for generic type annotations
 import configparser
+from dataclasses import dataclass
 from datetime import date
 from datetime import datetime
 from os import PathLike
-from typing import NamedTuple
 from typing import Type
-from typing import TypeVar
 
-T1 = TypeVar("T1", bound=int | float)
-T2 = TypeVar("T2", bound=int | float)
+iorf = int | float
 
 
-def parse_dict(value: str, key_type: Type[T1], value_type: Type[T2]) -> dict[T1, T2]:
+def parse_dict[T1: iorf, T2: iorf](
+    value: str, key_type: Type[T1], value_type: Type[T2]
+) -> dict[T1, T2]:
     """
     Parses a string in the format "key: value, key: value, .....", where key and value are separated by a colon
 
@@ -34,7 +34,9 @@ def parse_dict(value: str, key_type: Type[T1], value_type: Type[T2]) -> dict[T1,
     return retval
 
 
-def parse_tuple(value: str, type1: Type[T1], type2: Type[T2]) -> tuple[T1, T2]:
+def parse_tuple[T1: iorf, T2: iorf](
+    value: str, type1: Type[T1], type2: Type[T2]
+) -> tuple[T1, T2]:
     """
     Parses a string in the format "valueA, valueB", where valueA and valueB are separated by a comma
     and may have variable whitespace around them. It returns a tuple of two values with the specified types.
@@ -90,7 +92,8 @@ def parse_date(value: str) -> date:
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-class SimParams(NamedTuple):
+@dataclass
+class SimParams:
     observation_start_date: date
     observation_end_date: date
     study_start_date: date
@@ -130,44 +133,44 @@ def read_config(config_file_path: str | PathLike[str]) -> SimParams:
     config.read(config_file_path)
 
     params = SimParams(
-        observation_start_date=config.get_date("SimParams", "observation_start_date"),
-        observation_end_date=config.get_date("SimParams", "observation_end_date"),
-        study_start_date=config.get_date("SimParams", "study_start_date"),
-        cohort_size=config.getint("SimParams", "cohort_size"),
-        drug_a_treatment_fraction_range=config.get_tuple_ff(
+        observation_start_date=config.get_date("SimParams", "observation_start_date"),  # pyright: ignore [reportAttributeAccessIssue]
+        observation_end_date=config.get_date("SimParams", "observation_end_date"),  # pyright: ignore [reportAttributeAccessIssue]
+        study_start_date=config.get_date("SimParams", "study_start_date"),  # pyright: ignore [reportAttributeAccessIssue]
+        cohort_size=config.getint("SimParams", "cohort_size"),  # pyright: ignore [reportAttributeAccessIssue]
+        drug_a_treatment_fraction_range=config.get_tuple_ff(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_a_treatment_fraction_range"
         ),
-        drug_b_treatment_fraction_range=config.get_tuple_ff(
+        drug_b_treatment_fraction_range=config.get_tuple_ff(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_b_treatment_fraction_range"
         ),
-        drug_a_start_date_range=config.get_tuple_ii(
+        drug_a_start_date_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_a_start_date_range"
         ),
-        drug_b_start_date_range=config.get_tuple_ii(
+        drug_b_start_date_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_b_start_date_range"
         ),
-        survival_probabilities_per_year=config.get_dict_if(
+        survival_probabilities_per_year=config.get_dict_if(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "survival_probabilities_per_year"
         ),
-        db_update_frequency_in_months=config.getint(
+        db_update_frequency_in_months=config.getint(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "db_update_frequency_in_months"
         ),
-        death_date_recording_latency_range=config.get_tuple_ii(
+        death_date_recording_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "death_date_recording_latency_range"
         ),
-        patients_abstracted_per_month=config.getint(
+        patients_abstracted_per_month=config.getint(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "patients_abstracted_per_month"
         ),
-        diagnosis_date_abstraction_latency_range=config.get_tuple_ii(
+        diagnosis_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "diagnosis_date_abstraction_latency_range"
         ),
-        drug_a_date_abstraction_latency_range=config.get_tuple_ii(
+        drug_a_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_a_date_abstraction_latency_range"
         ),
-        drug_b_date_abstraction_latency_range=config.get_tuple_ii(
+        drug_b_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "drug_b_date_abstraction_latency_range"
         ),
-        death_date_abstraction_latency_range=config.get_tuple_ii(
+        death_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue]
             "SimParams", "death_date_abstraction_latency_range"
         ),
     )

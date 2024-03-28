@@ -1,2 +1,4 @@
 !/rwdsim.iml
 /data/cohort.csv
+.DS_Store
+.pdm-python
