@@ -2,3 +2,5 @@
 /data/cohort.csv
 .DS_Store
 .pdm-python
+/rwdsim.iml
+/data/simulation.xlsx

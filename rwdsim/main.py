@@ -104,7 +104,7 @@ def determine_treatment_date(
         # Ensure that the treatment date is not after the death date
         if death_date is None or treatment_date < death_date:
             return treatment_date
-    # Otherwise, return None - indicating that the patient does not treatment
+    # Otherwise, return None - indicating that the patient does not receive treatment
     return None
 
 
