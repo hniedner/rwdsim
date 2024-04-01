@@ -1,21 +1,19 @@
 from datetime import date, timedelta
 from os import PathLike
+from pathlib import Path
+
 import pandas as pd
-from pandas.core.api import DataFrame
-from .cfgutils import read_config, SimParams
-from .main import Patient
+from pandas import DataFrame
+
+from .cfgutils import SimParams, read_config
+from .simulation import Patient
 
 
-def generate_report(
-    input_file: PathLike, config_file: PathLike, output_file: PathLike
-) -> None:
-    params: SimParams = read_config(config_file)
-    data = pd.read_csv(input_file)
-
+def generate_report(data: DataFrame) -> DataFrame:
     for report_date in pd.date_range(
         params.study_start_date,
         params.study_start_date + timedelta(weeks=52 * 10),
-        freq="M",
+        freq='M',
     ):
         generate_month_report(data, report_date)
 

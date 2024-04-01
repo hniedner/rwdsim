@@ -1,6 +1,9 @@
 !/rwdsim.iml
-/data/cohort.csv
+/data/*
 .DS_Store
 .pdm-python
 /rwdsim.iml
 /data/simulation.xlsx
+*__pycache__*
+/build
+*.egg-info*

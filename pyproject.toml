@@ -1,0 +1,65 @@
+[project]
+name = "rwdsim"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = []
+dependencies = [
+  "Pyarrow",
+  "pandas",
+  "numpy",
+  "scipy>=1.12.0",
+  "pytest",
+  "mypy",
+  "rwdsim @ file:///${PROJECT_ROOT}/",
+]
+requires-python = "==3.12.*"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+  "basedpyright>=1.7.0",
+  "ruff>=0.3.4",
+  "matplotlib>=3.8.3",
+  "-e file:///${PROJECT_ROOT}/#egg=rwdsim",
+  "pandas-stubs>=2.2.1.240316",
+]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+reportUnknownParameterType = true
+reportUnknownArgumentType = true
+reportUnknownLambdaType = true
+reportUnknownVariableType = true
+reportUnknownMemberType = true
+reportUnnecessaryTypeIgnoreComment = true
+reportUnreachable = true
+reportIgnoreCommentWithoutRule = true
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "RUF", # ruff specifig rules
+  "C90", # mccabe; code complexity
+  "C4",  # flake8-comprehesions
+  "B",   # flake8-bugbear
+]
+
+[tool.ruff.lint.isort]

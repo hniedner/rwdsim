@@ -1,17 +1,14 @@
 import random
 from dataclasses import asdict, dataclass
+from datetime import date, timedelta
 
-from datetime import date
-from datetime import timedelta
-from pathlib import Path
-
-from numpy import isnan
-from scipy.interpolate import PchipInterpolator
-from pandas import DataFrame, Series
 from dateutil.relativedelta import relativedelta
+from numpy import isnan
+from pandas import DataFrame
+from scipy.interpolate import PchipInterpolator
 
-from rwdsim.cfgutils import SimParams, read_config
 from rwdsim import simutils
+from rwdsim.cfgutils import SimParams
 
 
 @dataclass
@@ -32,9 +29,7 @@ class Patient:
     death_date_abstracted: date | None
 
 
-def calculate_min_max_event_date(
-    patients: list[Patient], event_name: str
-) -> tuple[date | None, date | None]:
+def calculate_min_max_event_date(patients: list[Patient], event_name: str) -> tuple[date | None, date | None]:
     """
     Determines the minimum and maximum event date for any event across all patients.
 
@@ -47,9 +42,7 @@ def calculate_min_max_event_date(
                                          or None if no events of that type exist.
     """
     event_dates: list[date] = [
-        getattr(patient, event_name)
-        for patient in patients
-        if getattr(patient, event_name) is not None
+        getattr(patient, event_name) for patient in patients if getattr(patient, event_name) is not None
     ]
 
     if not event_dates:  # If there are no event dates, return None for both min and max
@@ -58,9 +51,7 @@ def calculate_min_max_event_date(
     return min(event_dates), max(event_dates)
 
 
-def calculate_next_abstraction_assessment_date(
-    offset_date: date, sim_params: SimParams
-) -> date:
+def calculate_next_abstraction_assessment_date(offset_date: date, sim_params: SimParams) -> date:
     """
     Calculates the next abstraction assessment date based on the offset date and the database update frequency.
 
@@ -71,9 +62,7 @@ def calculate_next_abstraction_assessment_date(
     Returns:
         date: The next abstraction assessment date.
     """
-    return offset_date + relativedelta(
-        months=sim_params.db_update_frequency_in_months, day=2
-    )
+    return offset_date + relativedelta(months=sim_params.db_update_frequency_in_months, day=2)
 
 
 def determine_treatment_date(
@@ -108,9 +97,7 @@ def determine_treatment_date(
     return None
 
 
-def determine_death_date(
-    diagnosis_date: date, survival_probabilities: dict[int, float]
-) -> date | None:
+def determine_death_date(diagnosis_date: date, survival_probabilities: dict[int, float]) -> date | None:
     x = [1.0]
     x.extend(survival_probabilities.values())
     y = [0]
@@ -123,9 +110,7 @@ def determine_death_date(
     return diagnosis_date + timedelta(days=year_delta * 365.25)
 
 
-def simulate_delayed_recording_date(
-    event_date: date | None, latency_range: tuple[int, int]
-) -> date | None:
+def simulate_delayed_recording_date(event_date: date | None, latency_range: tuple[int, int]) -> date | None:
     """
     Simulates the delayed recording date for a given event date.
 
@@ -163,15 +148,11 @@ def calculate_exported_date(
     if event_date < study_start_date:
         # If the event date is before the study start date, set the export date
         # to the first export cycle after the study start date
-        return study_start_date.replace(day=1) + relativedelta(
-            months=db_update_frequency_in_months
-        )
+        return study_start_date.replace(day=1) + relativedelta(months=db_update_frequency_in_months)
 
     # Calculate the time difference from the event date to the study start date
     months_since_study_start = (
-        (event_date.year - study_start_date.year) * 12
-        + event_date.month
-        - study_start_date.month
+        (event_date.year - study_start_date.year) * 12 + event_date.month - study_start_date.month
     )
 
     # Find out how many months until the next export cycle
@@ -188,9 +169,7 @@ def calculate_exported_date(
     return next_export_date.replace(day=1)
 
 
-def is_event_exported(
-    event_date: date | None, event_date_exported: date | None, export_date: date
-) -> bool:
+def is_event_exported(event_date: date | None, event_date_exported: date | None, export_date: date) -> bool:
     """
     Determines whether an event is exported by the given export date.
     On the given export date, the event is considered to be exported
@@ -230,7 +209,7 @@ def is_patient_fully_exported(patient: Patient, export_date: date) -> bool:
     Returns:
         bool: Whether the patient is fully exported.
     """
-    event_pairs = [
+    event_pairs: list[tuple[date | None, date | None]] = [
         (patient.diagnosis_date, patient.diagnosis_date_exported),
         (patient.drug_a_date, patient.drug_a_date_exported),
         (patient.drug_b_date, patient.drug_b_date_exported),
@@ -259,14 +238,10 @@ def generate_patient_cohort(sim_params: SimParams) -> list[Patient]:
             sim_params.observation_start_date, sim_params.observation_end_date
         )
         # Generate a random death date
-        death_date = determine_death_date(
-            diagnosis_date, sim_params.survival_probabilities_per_year
-        )
+        death_date = determine_death_date(diagnosis_date, sim_params.survival_probabilities_per_year)
         # Generate death date recorded date with a random delay within the range of the death date recording latency
         death_date_recorded = (
-            simulate_delayed_recording_date(
-                death_date, sim_params.death_date_recording_latency_range
-            )
+            simulate_delayed_recording_date(death_date, sim_params.death_date_recording_latency_range)
             if death_date
             else None
         )
@@ -316,16 +291,14 @@ def generate_exported_dates(patients: list[Patient], sim_params: SimParams) -> N
     """
     for patient in patients:
         for event_name in [
-            "diagnosis_date",
-            "drug_a_date",
-            "drug_b_date",
-            "death_date_recorded",
+            'diagnosis_date',
+            'drug_a_date',
+            'drug_b_date',
+            'death_date_recorded',
         ]:
             # For death_date, we use death_date_recorded as the event date
             event_date: date | None = (
-                getattr(patient, event_name)
-                if event_name != "death_date_recorded"
-                else patient.death_date
+                getattr(patient, event_name) if event_name != 'death_date_recorded' else patient.death_date
             )
             # remove the _recorded suffix from the death_date and
             # append _exported to create the exported date attribute name
@@ -387,12 +360,12 @@ def is_patient_abstractable(patient: Patient, assessment_date: date) -> bool:
     return any(
         # Check each event in the patient record to see if it's ready for abstraction
         is_event_abstractable(
-            event_date_exported=getattr(patient, f"{event}_date_exported"),
-            event_date_abstracted=getattr(patient, f"{event}_date_abstracted"),
+            event_date_exported=getattr(patient, f'{event}_date_exported'),
+            event_date_abstracted=getattr(patient, f'{event}_date_abstracted'),
             assessment_date=assessment_date,
         )
         # Iterate over the patient events
-        for event in ["diagnosis", "drug_a", "drug_b", "death"]
+        for event in ['diagnosis', 'drug_a', 'drug_b', 'death']
     )
 
 
@@ -410,7 +383,7 @@ def is_patient_fully_abstracted(patient: Patient) -> bool:
     """
     is_fully_abstracted: bool = True
     # Checking each event in the patient record
-    events = [
+    events: list[tuple[date | None, date | None]] = [
         (patient.diagnosis_date, patient.diagnosis_date_abstracted),
         (patient.drug_a_date, patient.drug_a_date_abstracted),
         (patient.drug_b_date, patient.drug_b_date_abstracted),
@@ -433,8 +406,8 @@ def set_events_abstracted_date(
     event_name: str,
     assessment_date: date,
 ) -> None:
-    event_exported_name = f"{event_name}_date_exported"
-    event_abstracted_name = f"{event_name}_date_abstracted"
+    event_exported_name = f'{event_name}_date_exported'
+    event_abstracted_name = f'{event_name}_date_abstracted'
     event_exported_date: date = getattr(patient, event_exported_name)
     abstracted_date: date = getattr(patient, event_abstracted_name)
     # Check if the event can be abstracted.
@@ -446,9 +419,7 @@ def set_events_abstracted_date(
         assessment_date=assessment_date,
     ):
         # Calculate the abstracted date based on the event's abstraction latency range
-        latency_range = getattr(
-            sim_params, f"{event_name}_date_abstraction_latency_range"
-        )
+        latency_range = getattr(sim_params, f'{event_name}_date_abstraction_latency_range')
         abstraction_latency = random.randint(*latency_range)
         abstracted_date = event_exported_date + timedelta(days=abstraction_latency)
 
@@ -474,11 +445,7 @@ def generate_abstracted_dates(patients: list[Patient], sim_params: SimParams) ->
 
     while True:
         # Determine patients with events that can be abstracted at the current assessment_date
-        abstractable_patients = [
-            patient
-            for patient in patients
-            if is_patient_abstractable(patient, assessment_date)
-        ]
+        abstractable_patients = [patient for patient in patients if is_patient_abstractable(patient, assessment_date)]
 
         if not abstractable_patients:
             break  # Exit the loop if there are no abstractable patients
@@ -490,15 +457,14 @@ def generate_abstracted_dates(patients: list[Patient], sim_params: SimParams) ->
             # that can be abstracted per db updates frequency (nr of months)
             # and abstraction rate (number of patients per month)
             min(
-                sim_params.patients_abstracted_per_month
-                * sim_params.db_update_frequency_in_months,
+                sim_params.patients_abstracted_per_month * sim_params.db_update_frequency_in_months,
                 len(abstractable_patients),
             ),
         )
 
         # Assign abstracted dates to the selected patients' events
         for patient in patients_to_abstract:
-            for event_name in ["diagnosis", "drug_a", "drug_b", "death"]:
+            for event_name in ['diagnosis', 'drug_a', 'drug_b', 'death']:
                 set_events_abstracted_date(
                     sim_params=sim_params,
                     patient=patient,
@@ -534,119 +500,88 @@ def sanity_check_patient_records(patients: list[Patient]) -> None:
     """
     for patient in patients:
         if patient.diagnosis_date is None:
-            raise Exception(
-                f"Diagnosis date is not set for patient {patient.patient_id}"
-            )
+            raise Exception(f'Diagnosis date is not set for patient {patient.patient_id}')
 
         if patient.death_date and (
-            patient.death_date_recorded is None
-            or patient.death_date > patient.death_date_recorded
+            patient.death_date_recorded is None or patient.death_date > patient.death_date_recorded
         ):
-            raise Exception(
-                f"Death date is recorded incorrectly for patient {patient.patient_id}"
-            )
+            raise Exception(f'Death date is recorded incorrectly for patient {patient.patient_id}')
 
-        for event in ["diagnosis", "drug_a", "drug_b", "death"]:
-            event_date: date | None = getattr(patient, f"{event}_date")
-            event_date_exported: date | None = getattr(
-                patient, f"{event}_date_exported"
-            )
-            event_date_abstracted: date | None = getattr(
-                patient, f"{event}_date_abstracted"
-            )
+        for event in ['diagnosis', 'drug_a', 'drug_b', 'death']:
+            event_date: date | None = getattr(patient, f'{event}_date')
+            event_date_exported: date | None = getattr(patient, f'{event}_date_exported')
+            event_date_abstracted: date | None = getattr(patient, f'{event}_date_abstracted')
 
             if event_date and event_date_exported and event_date > event_date_exported:
+                raise Exception(f'{event.capitalize()} date is after its export date for patient {patient.patient_id}')
+
+            if event_date_exported and event_date_abstracted and event_date_exported > event_date_abstracted:
                 raise Exception(
-                    f"{event.capitalize()} date is after its export date for patient {patient.patient_id}"
+                    f'{event.capitalize()} export date is after its abstraction date for patient {patient.patient_id}'
                 )
 
-            if (
-                event_date_exported
-                and event_date_abstracted
-                and event_date_exported > event_date_abstracted
-            ):
+            if event_date and event_date_abstracted and event_date > event_date_abstracted:
                 raise Exception(
-                    f"{event.capitalize()} export date is after its abstraction date for patient {patient.patient_id}"
-                )
-
-            if (
-                event_date
-                and event_date_abstracted
-                and event_date > event_date_abstracted
-            ):
-                raise Exception(
-                    f"{event.capitalize()} date is after its abstraction date for patient {patient.patient_id}"
+                    f'{event.capitalize()} date is after its abstraction date for patient {patient.patient_id}'
                 )
 
 
-def main():
-    data_dir: Path = Path(__file__).parent.parent / "data"
-    config_file_path: Path = Path(__file__).parent.parent / "config.ini"
-    print(f"Reading configuration from {config_file_path}")
-    sim_params: SimParams = read_config(config_file_path)
-    print("##########################################################################")
-    print("#  Simulation parameters:                                               #")
-    print("##########################################################################")
-    print("\n".join(f"{key}: {value}" for key, value in asdict(sim_params).items()))
-    print("##########################################################################")
+def run_simulation(simulation_params: SimParams) -> DataFrame:
+    print('##########################################################################')
+    print('#  Simulation parameters:                                               #')
+    print('##########################################################################')
+    print('\n'.join(f'{key}: {value}' for key, value in asdict(simulation_params).items()))
+    print('##########################################################################')
     print()
     # Generate patient data
-    cohort: list[Patient] = generate_patient_cohort(sim_params)
-    print(f"Generated patient cohort for {len(cohort)} patients.")
+    cohort: list[Patient] = generate_patient_cohort(simulation_params)
+    print(f'Generated patient cohort for {len(cohort)} patients.')
 
     # Assign export dates to the events of the patients
-    generate_exported_dates(patients=cohort, sim_params=sim_params)
-    print(f"Generated export dates for {len(cohort)} patients.")
+    generate_exported_dates(patients=cohort, sim_params=simulation_params)
+    print(f'Generated export dates for {len(cohort)} patients.')
 
     # Assign abstracted dates to the events of the patients
-    generate_abstracted_dates(patients=cohort, sim_params=sim_params)
+    generate_abstracted_dates(patients=cohort, sim_params=simulation_params)
     # Filter patients who are fully abstracted now at the assessment date.
-    fully_abstracted_patients: list[Patient] = [
-        patient for patient in cohort if is_patient_fully_abstracted(patient)
-    ]
-    print(f"Fully abstracted {len(fully_abstracted_patients)} patients.")
+    fully_abstracted_patients: list[Patient] = [patient for patient in cohort if is_patient_fully_abstracted(patient)]
+    print(f'Fully abstracted {len(fully_abstracted_patients)} patients.')
 
     try:
         sanity_check_patient_records(cohort)
-        print(f"{len(cohort)} patient records passed the sanity check.")
+        print(f'{len(cohort)} patient records passed the sanity check.')
     except Exception as e:
         print(e, type(e))
 
-    print("Cohort Stats:")
-    print(f"Study start date: {sim_params.study_start_date}")
-    for event in ["diagnosis", "drug_a", "drug_b", "death"]:
-        for event_suffix in ["date", "date_exported", "date_abstracted"]:
-            event_name: str = f"{event}_{event_suffix}"
+    print('Cohort Stats:')
+    print(f'Study start date: {simulation_params.study_start_date}')
+    for event in ['diagnosis', 'drug_a', 'drug_b', 'death']:
+        for event_suffix in ['date', 'date_exported', 'date_abstracted']:
+            event_name: str = f'{event}_{event_suffix}'
             min_date, max_date = calculate_min_max_event_date(cohort, event_name)
-            print(f"{event_name} min: {min_date} and max: {max_date}.")
+            print(f'{event_name} min: {min_date} and max: {max_date}.')
 
     # convert the patient time data to a pandas dataframe
-    cohort_df: DataFrame | Series = DataFrame(cohort).sort_values(by="diagnosis_date")
+    cohort_df: DataFrame = DataFrame(cohort).sort_values(by='diagnosis_date')  # pyright: ignore [reportUnknownMemberType]
 
     # rearrange the columns to juxtaposition the event date with the export date and the abstracted date
     cohort_df = cohort_df[
         [
-            "patient_id",
-            "diagnosis_date",
-            "diagnosis_date_exported",
-            "diagnosis_date_abstracted",
-            "drug_a_date",
-            "drug_a_date_exported",
-            "drug_a_date_abstracted",
-            "drug_b_date",
-            "drug_b_date_exported",
-            "drug_b_date_abstracted",
-            "death_date",
-            "death_date_recorded",
-            "death_date_exported",
-            "death_date_abstracted",
+            'patient_id',
+            'diagnosis_date',
+            'diagnosis_date_exported',
+            'diagnosis_date_abstracted',
+            'drug_a_date',
+            'drug_a_date_exported',
+            'drug_a_date_abstracted',
+            'drug_b_date',
+            'drug_b_date_exported',
+            'drug_b_date_abstracted',
+            'death_date',
+            'death_date_recorded',
+            'death_date_exported',
+            'death_date_abstracted',
         ]
     ]
 
-    # Write the simulated patient time dataset to a CSV file.
-    cohort_df.to_csv(data_dir / "cohort.csv")
-    print(f"Wrote simulated dataset to {data_dir / 'cohort.csv'}")
-
-
-if __name__ == "__main__":
-    main()
+    return cohort_df
