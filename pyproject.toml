@@ -34,6 +34,7 @@ dev = [
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
+include = ["src", "scripts"]
 reportUnknownParameterType = true
 reportUnknownArgumentType = true
 reportUnknownLambdaType = true
@@ -42,6 +43,8 @@ reportUnknownMemberType = true
 reportUnnecessaryTypeIgnoreComment = true
 reportUnreachable = true
 reportIgnoreCommentWithoutRule = true
+reportImportCycles = true
+reportPrivateImportUsage = true
 
 [tool.ruff]
 line-length = 120
@@ -63,3 +66,4 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
+known-first-party = ["rwdsim"]

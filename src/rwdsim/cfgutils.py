@@ -1,9 +1,10 @@
 # Define type variables for generic type annotations
 import configparser
-from dataclasses import dataclass
 from datetime import date, datetime
 from io import TextIOWrapper
 from typing import Type
+
+from .classes import SimParams
 
 iorf = int | float
 
@@ -87,26 +88,6 @@ def parse_date(value: str) -> date:
     return datetime.strptime(value, '%Y-%m-%d').date()
 
 
-@dataclass
-class SimParams:
-    observation_start_date: date
-    observation_end_date: date
-    study_start_date: date
-    cohort_size: int
-    drug_a_treatment_fraction_range: tuple[float, float]
-    drug_b_treatment_fraction_range: tuple[float, float]
-    drug_a_start_date_range: tuple[int, int]
-    drug_b_start_date_range: tuple[int, int]
-    survival_probabilities_per_year: dict[int, float]
-    db_update_frequency_in_months: int
-    death_date_recording_latency_range: tuple[int, int]
-    patients_abstracted_per_month: int
-    diagnosis_date_abstraction_latency_range: tuple[int, int]
-    drug_a_date_abstraction_latency_range: tuple[int, int]
-    drug_b_date_abstraction_latency_range: tuple[int, int]
-    death_date_abstraction_latency_range: tuple[int, int]
-
-
 def read_config(config_file: TextIOWrapper) -> SimParams:
     """Reads simulation parameters from a configuration file and populates the SimParams named tuple.
 
@@ -132,17 +113,11 @@ def read_config(config_file: TextIOWrapper) -> SimParams:
         observation_end_date=config.get_date('SimParams', 'observation_end_date'),  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
         study_start_date=config.get_date('SimParams', 'study_start_date'),  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
         cohort_size=config.getint('SimParams', 'cohort_size'),
-        drug_a_treatment_fraction_range=config.get_tuple_ff(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_a_treatment_fraction_range'
+        drug_treatment_fraction_range=config.get_tuple_ff(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
+            'SimParams', 'drug_treatment_fraction_range'
         ),
-        drug_b_treatment_fraction_range=config.get_tuple_ff(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_b_treatment_fraction_range'
-        ),
-        drug_a_start_date_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_a_start_date_range'
-        ),
-        drug_b_start_date_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_b_start_date_range'
+        drug_start_date_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
+            'SimParams', 'drug_start_date_range'
         ),
         survival_probabilities_per_year=config.get_dict_if(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
             'SimParams', 'survival_probabilities_per_year'
@@ -155,11 +130,8 @@ def read_config(config_file: TextIOWrapper) -> SimParams:
         diagnosis_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
             'SimParams', 'diagnosis_date_abstraction_latency_range'
         ),
-        drug_a_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_a_date_abstraction_latency_range'
-        ),
-        drug_b_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            'SimParams', 'drug_b_date_abstraction_latency_range'
+        drug_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
+            'SimParams', 'drug_date_abstraction_latency_range'
         ),
         death_date_abstraction_latency_range=config.get_tuple_ii(  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
             'SimParams', 'death_date_abstraction_latency_range'
