@@ -6,10 +6,11 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 
-class Drug(BaseModel):
+class Drug(BaseModel, extra='forbid', frozen=True):
     name: str
     survival_probabilities: dict[int, float]
     start_date_range: tuple[int, int]
+    probability_weights: tuple[int, ...]
 
 
 @dataclass
@@ -39,7 +40,8 @@ class Report:
     tx_db_delta_days: float
     tx_abst_delta_days: float
     db_abst_delta_days: float
-    treated_fraction: float
+    treated_drug_fraction: float
+    treated_total_fraction: float
     survival_fraction: float
 
     def data_equals(self, other: 'Report | None') -> bool:
@@ -70,7 +72,7 @@ class SimParams(BaseSettings):
     diagnosis_date_abstraction_latency_range: tuple[int, int]
     drug_date_abstraction_latency_range: tuple[int, int]
     death_date_abstraction_latency_range: tuple[int, int]
-    drugs: list[Drug]
+    drugs: tuple[Drug, ...]
 
 
 class InfoStage(StrEnum):

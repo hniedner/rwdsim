@@ -1,5 +1,6 @@
 import random
 from datetime import date, timedelta
+from functools import cache
 
 from dateutil.relativedelta import relativedelta
 from numpy import isnan
@@ -76,16 +77,21 @@ def determine_treatment_date(
 
 
 def determine_death_date(diagnosis_date: date, survival_probabilities: dict[int, float]) -> date | None:
-    x = [1.0]
-    x.extend(survival_probabilities.values())
-    y = [0]
-    y.extend(survival_probabilities.keys())
-    interpolated = PchipInterpolator(x[::-1], y[::-1], extrapolate=False)
+    interpolated = _get_interpolator(tuple(survival_probabilities.keys()), tuple(survival_probabilities.values()))
     year_delta: float = interpolated([random.random()])[0]
     if isnan(year_delta):
         return None
 
     return diagnosis_date + timedelta(days=year_delta * 365.25)
+
+
+@cache
+def _get_interpolator(survival_years: tuple[int, ...], survival_probabilities: tuple[float, ...]) -> PchipInterpolator:
+    x = [1.0]
+    x.extend(survival_probabilities)
+    y = [0]
+    y.extend(survival_years)
+    return PchipInterpolator(x[::-1], y[::-1], extrapolate=False)
 
 
 def simulate_delayed_recording_date(event_date: date | None, latency_range: tuple[int, int]) -> date | None:
@@ -216,7 +222,9 @@ def generate_patient_cohort(sim_params: SimParams) -> list[Patient]:
             sim_params.observation_start_date, sim_params.observation_end_date
         )
         # Select a random drug from those configured  TODO: different likelyhoods for each drug
-        drug = random.choice(sim_params.drugs)
+        drug = simutils.select_drug(
+            diagnosis_date, sim_params.drugs, sim_params.observation_start_date, sim_params.observation_end_date
+        )
         # Generate a random death date
         death_date = determine_death_date(diagnosis_date, drug.survival_probabilities)
         # Generate death date recorded date with a random delay within the range of the death date recording latency

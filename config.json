@@ -2,7 +2,7 @@
   "observation_start_date": "2010-01-01",
   "observation_end_date": "2020-12-31",
   "study_start_date": "2015-01-01",
-  "cohort_size": 1000,
+  "cohort_size": 10000,
   "db_update_frequency_in_months": 2,
   "patients_abstracted_per_month": 250,
   "diagnosis_date_abstraction_latency_range": [
@@ -33,6 +33,10 @@
       "start_date_range": [
         7,
         180
+      ],
+      "probability_weights": [
+        10,
+        1
       ]
     },
     {
@@ -46,6 +50,10 @@
       "start_date_range": [
         7,
         180
+      ],
+      "probability_weights": [
+        1,
+        10
       ]
     }
   ]

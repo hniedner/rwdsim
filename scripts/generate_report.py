@@ -57,7 +57,7 @@ for drug in sim_params.drugs:
         generate_report_for_drugs(
             data,
             sim_params.study_start_date + timedelta(days=7 * 52 * 15),
-            [drug],
+            (drug,),
             f'Drug {drug.name}',
         )
     )
@@ -67,7 +67,7 @@ for drug in sim_params.drugs:
     last_report: Report | None = None
     report_date: date = sim_params.study_start_date
     report_count: int = 0
-    report = generate_report_for_drugs(data, report_date, [drug], f'Drug {drug.name}: {report_date}')
+    report = generate_report_for_drugs(data, report_date, (drug,), f'Drug {drug.name}: {report_date}')
     while (
         args.report_count
         and report_count < args.report_count
@@ -78,7 +78,7 @@ for drug in sim_params.drugs:
         last_report = report
         report_date += timedelta(days=args.frequency)
         report_count += 1
-        report = generate_report_for_drugs(data, report_date, [drug], f'Drug {drug.name}: {report_date}')
+        report = generate_report_for_drugs(data, report_date, (drug,), f'Drug {drug.name}: {report_date}')
 
 reports_df: DataFrame = DataFrame(reports)
 reports_df.to_csv(args.output, index=False)

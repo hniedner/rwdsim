@@ -1,7 +1,12 @@
 import random
 from datetime import date, timedelta
+from functools import cache
+from typing import Any
 
 import numpy as np
+from scipy.interpolate import PchipInterpolator
+
+from rwdsim.classes import Drug
 
 
 def generate_random_date(start_date: date, end_date: date) -> date:
@@ -15,6 +20,30 @@ def generate_random_date(start_date: date, end_date: date) -> date:
         date: A random date between start_date and end_date.
     """
     return start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
+
+
+def select_drug(diagnosis_date: date, drugs: tuple[Drug, ...], observation_start: date, observation_end: date) -> Drug:
+    normalized_progress = (diagnosis_date - observation_start) / (observation_end - observation_start)
+    interps: list[PchipInterpolator] = _get_interpolated_drug_weights((drug.probability_weights for drug in drugs))
+    probs: np.ndarray[Any, np.dtype[np.float64]] = np.array([interp([normalized_progress])[0] for interp in interps])
+    probs /= probs.sum()
+    rand: float = random.random()
+    prob_sum: float = 0
+    for i in range(len(probs)):
+        prob_sum += probs[i]
+        if rand <= prob_sum:
+            return drugs[i]
+    raise Exception('Failed to select a drug, please check that each drug has at least 1 weight configured.')
+
+
+@cache
+def _get_interpolated_drug_weights(drugs_probability_wieghts: tuple[tuple[float, ...], ...]) -> list[PchipInterpolator]:
+    interps: list[PchipInterpolator] = []
+    for weights in drugs_probability_wieghts:
+        sp = np.linspace(0, 1, len(weights))
+        interps.append(PchipInterpolator(sp, weights))
+
+    return interps
 
 
 def calculate_probabilities_over_period(
