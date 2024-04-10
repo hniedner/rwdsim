@@ -12,6 +12,9 @@ class Drug(BaseModel, extra='forbid', frozen=True):
     start_date_range: tuple[int, int]
     probability_weights: tuple[int, ...]
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @dataclass
 class Patient:
