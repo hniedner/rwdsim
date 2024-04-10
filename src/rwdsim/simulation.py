@@ -1,5 +1,4 @@
 import random
-from dataclasses import asdict
 from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
@@ -10,7 +9,7 @@ from scipy.interpolate import PchipInterpolator
 from rwdsim import simutils
 from rwdsim.cfgutils import SimParams
 
-from .classes import Drug, Patient
+from .classes import Patient
 
 
 def calculate_min_max_event_date(patients: list[Patient], event_name: str) -> tuple[date | None, date | None]:
@@ -52,7 +51,6 @@ def calculate_next_abstraction_assessment_date(offset_date: date, sim_params: Si
 def determine_treatment_date(
     diagnosis_date: date,
     death_date: date | None,
-    treatment_fraction_range: tuple[float, float],
     treatment_date_range: tuple[int, int],
 ) -> date | None:
     """Determines the treatment date for a given patient.
@@ -66,17 +64,13 @@ def determine_treatment_date(
     Returns:
         date: The treatment date.
     """
-    # Generate a random treatment fraction
-    treatment_fraction: float = random.uniform(*treatment_fraction_range)
     # Generate a random treatment date offset from the diagnosis date in days
     treatment_date_offset: int = random.randint(*treatment_date_range)
-    # Determine if the patient receives treatment
-    if random.random() < treatment_fraction:
-        # Generate a random treatment date
-        treatment_date: date = diagnosis_date + timedelta(days=treatment_date_offset)
-        # Ensure that the treatment date is not after the death date
-        if death_date is None or treatment_date < death_date:
-            return treatment_date
+    # Generate a random treatment date
+    treatment_date: date = diagnosis_date + timedelta(days=treatment_date_offset)
+    # Ensure that the treatment date is not after the death date
+    if death_date is None or treatment_date < death_date:
+        return treatment_date
     # Otherwise, return None - indicating that the patient does not receive treatment
     return None
 
@@ -221,21 +215,21 @@ def generate_patient_cohort(sim_params: SimParams) -> list[Patient]:
         diagnosis_date = simutils.generate_random_date(
             sim_params.observation_start_date, sim_params.observation_end_date
         )
+        # Select a random drug from those configured  TODO: different likelyhoods for each drug
+        drug = random.choice(sim_params.drugs)
         # Generate a random death date
-        death_date = determine_death_date(diagnosis_date, sim_params.survival_probabilities_per_year)
+        death_date = determine_death_date(diagnosis_date, drug.survival_probabilities)
         # Generate death date recorded date with a random delay within the range of the death date recording latency
         death_date_recorded = (
             simulate_delayed_recording_date(death_date, sim_params.death_date_recording_latency_range)
             if death_date
             else None
         )
-        drug = Drug.A if random.random() > 0.5 else Drug.B
-        # Generate a random treatment date TODO: different likelyhoods for a and b
+        # Generate a random treatment date
         drug_date = determine_treatment_date(
             diagnosis_date,
             death_date,
-            sim_params.drug_treatment_fraction_range,
-            sim_params.drug_start_date_range,
+            drug.start_date_range,
         )
         # Create a patient record and add it to the cohort
         cohort.append(
@@ -505,7 +499,7 @@ def run_simulation(simulation_params: SimParams) -> DataFrame:
     print('##########################################################################')
     print('#  Simulation parameters:                                               #')
     print('##########################################################################')
-    print('\n'.join(f'{key}: {value}' for key, value in asdict(simulation_params).items()))
+    print('\n'.join(f'{key}: {value}' for key, value in simulation_params.model_dump().items()))
     print('##########################################################################')
     print()
     # Generate patient data
@@ -537,7 +531,8 @@ def run_simulation(simulation_params: SimParams) -> DataFrame:
             print(f'{event_name} min: {min_date} and max: {max_date}.')
 
     # convert the patient time data to a pandas dataframe
-    cohort_df: DataFrame = DataFrame(cohort).sort_values(by='diagnosis_date')  # pyright: ignore [reportUnknownMemberType]
+    cohort_df: DataFrame = DataFrame(cohort)
+    cohort_df = cohort_df.sort_values(by='diagnosis_date')  # pyright: ignore [reportUnknownMemberType]
 
     # rearrange the columns to juxtaposition the event date with the export date and the abstracted date
     cohort_df = cohort_df[

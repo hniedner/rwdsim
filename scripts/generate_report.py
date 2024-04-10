@@ -1,13 +1,12 @@
 from argparse import ArgumentParser
 from datetime import date, timedelta
-from functools import reduce
 from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
 
 from rwdsim.cfgutils import SimParams, read_config
-from rwdsim.classes import Drug, Report
+from rwdsim.classes import Report
 from rwdsim.reportutils import generate_report_for_drugs
 from rwdsim.simulation import run_simulation
 
@@ -29,7 +28,6 @@ arg_parser.add_argument(
 )
 
 args = arg_parser.parse_args()
-print(args)
 with open(args.simconfig) as cfg_file:
     sim_params: SimParams = read_config(cfg_file)
 
@@ -48,28 +46,28 @@ reports.append(
     generate_report_for_drugs(
         data,
         sim_params.study_start_date + timedelta(days=7 * 52 * 15),
-        reduce(lambda a, b: a | b, Drug),
+        sim_params.drugs,
         'Whole Cohort',
     )
 )
 
 # summary for each drug
-for drug in Drug:
+for drug in sim_params.drugs:
     reports.append(
         generate_report_for_drugs(
             data,
             sim_params.study_start_date + timedelta(days=7 * 52 * 15),
-            drug,
+            [drug],
             f'Drug {drug.name}',
         )
     )
 
 # yearly reports per drug
-for drug in Drug:
+for drug in sim_params.drugs:
     last_report: Report | None = None
     report_date: date = sim_params.study_start_date
     report_count: int = 0
-    report = generate_report_for_drugs(data, report_date, drug, f'Drug {drug.name}: {report_date}')
+    report = generate_report_for_drugs(data, report_date, [drug], f'Drug {drug.name}: {report_date}')
     while (
         args.report_count
         and report_count < args.report_count
@@ -80,7 +78,7 @@ for drug in Drug:
         last_report = report
         report_date += timedelta(days=args.frequency)
         report_count += 1
-        report = generate_report_for_drugs(data, report_date, drug, f'Drug {drug.name}: {report_date}')
+        report = generate_report_for_drugs(data, report_date, [drug], f'Drug {drug.name}: {report_date}')
 
 reports_df: DataFrame = DataFrame(reports)
 reports_df.to_csv(args.output, index=False)

@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 from datetime import date
-from enum import Flag, StrEnum, auto
+from enum import StrEnum
+
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
-class Drug(Flag):
-    A = auto()
-    B = auto()
+class Drug(BaseModel):
+    name: str
+    survival_probabilities: dict[int, float]
+    start_date_range: tuple[int, int]
 
 
 @dataclass
@@ -55,21 +59,18 @@ class Report:
         return eq
 
 
-@dataclass
-class SimParams:
+class SimParams(BaseSettings):
     observation_start_date: date
     observation_end_date: date
     study_start_date: date
     cohort_size: int
-    drug_treatment_fraction_range: tuple[float, float]
-    drug_start_date_range: tuple[int, int]
-    survival_probabilities_per_year: dict[int, float]
     db_update_frequency_in_months: int
     death_date_recording_latency_range: tuple[int, int]
     patients_abstracted_per_month: int
     diagnosis_date_abstraction_latency_range: tuple[int, int]
     drug_date_abstraction_latency_range: tuple[int, int]
     death_date_abstraction_latency_range: tuple[int, int]
+    drugs: list[Drug]
 
 
 class InfoStage(StrEnum):
