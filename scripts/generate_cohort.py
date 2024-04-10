@@ -21,4 +21,4 @@ data: DataFrame | Series = run_simulation(sim_params)
 
 print(f'Saving output to {args.output}')
 with open(args.output, 'w') as out_file:
-    data.to_csv(out_file)
+    data.to_csv(out_file, index=False)

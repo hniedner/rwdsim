@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
+from pandas import Timestamp
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
@@ -21,18 +22,18 @@ class Patient:
     patient_id: int
     drug: Drug
 
-    diagnosis_date: date
-    diagnosis_date_exported: date | None
-    diagnosis_date_abstracted: date | None
+    diagnosis_date: Timestamp
+    diagnosis_date_exported: Timestamp | None
+    diagnosis_date_abstracted: Timestamp | None
 
-    drug_date: date | None
-    drug_date_exported: date | None
-    drug_date_abstracted: date | None
+    drug_date: Timestamp | None
+    drug_date_exported: Timestamp | None
+    drug_date_abstracted: Timestamp | None
 
-    death_date: date | None
-    death_date_recorded: date | None
-    death_date_exported: date | None
-    death_date_abstracted: date | None
+    death_date: Timestamp | None
+    death_date_recorded: Timestamp | None
+    death_date_exported: Timestamp | None
+    death_date_abstracted: Timestamp | None
 
 
 @dataclass
